@@ -19,5 +19,5 @@ class StationDrone(models.Model):
 
 class StationRobot(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
-    drone = models.ForeignKey(Robot, on_delete=models.CASCADE)
+    robot = models.ForeignKey(Robot, on_delete=models.CASCADE)
     status = models.IntegerField(default=1)
