@@ -14,6 +14,15 @@ class OrderListViewSet(viewsets.ModelViewSet):
         queryset = OrderDetail.objects.all()
         return queryset
 
+    def create(self, request):
+        user = request.data.get('userId', None)
+        if user is not None:
+            queryset = OrderDetail.objects.filter(user=user)
+        else:
+            queryset = OrderDetail.objects.all()
+        queryset = queryset.values('id', 'status')
+        return Response({"order": queryset, "status": 200}, status=status.HTTP_200_OK)
+
 class PlaceOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
