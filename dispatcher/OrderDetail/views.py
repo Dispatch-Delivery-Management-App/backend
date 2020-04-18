@@ -15,7 +15,7 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
         else:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
         queryset = queryset.values('id', 'status')
-        return Response({"order": queryset, "status": 200}, status=status.HTTP_200_OK)
+        return Response({"Response":{"order": queryset}, "status": 200}, status=status.HTTP_200_OK)
 
 class OrderListViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
