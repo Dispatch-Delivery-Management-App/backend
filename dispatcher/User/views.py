@@ -12,3 +12,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         #queryset = User.objects.all()
         return Response({"message":"hello"}, status=status.HTTP_200_OK)
+
+
+class ProfileViewSet(viewsets.ModelViewSet):
+    pass
