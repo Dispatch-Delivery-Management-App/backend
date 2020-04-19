@@ -42,8 +42,6 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         queryset = OrderDetail.objects.all()
         return queryset
 
-
-
     def create(self,request):
         print("in create")
         user_id = request.data.get('user_id', None)
@@ -64,8 +62,13 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         print(from_address_id, to_address_id)
         station= request.data.get('station')
         tracking= request.data.get('tracking')
-        po = OrderDetail(user=user_id, from_address=from_address_id, to_address=to_address_id, station=station,tracking=tracking).save()
-        return
+        try:
+            po = OrderDetail(user=user_id, from_address=from_address_id, to_address=to_address_id, station=station,tracking=tracking)
+            po.save()
+        except:
+            print("Unable to save orderdetail model")
+            raise()
+        return None
 
 
     def verify_address_id(self, request, user_id):
