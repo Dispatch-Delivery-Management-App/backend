@@ -13,4 +13,3 @@ def executeSQL(sql):
         return [
             dict(zip(columns, row))
             for row in cursor.fetchall()
-        ]
