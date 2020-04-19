@@ -17,7 +17,7 @@ class OrderListViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        user = request.data.get('userId', None)
+        user = request.data.get('user_id', None)
         if user is not None:
             sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id WHERE OrderDetail_orderdetail.user_id = {};".format(user)
             res = executeSQL(sql)
