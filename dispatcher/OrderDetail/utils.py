@@ -2,8 +2,9 @@ from django.db import connection
 
 status_dict = {
     "draft": 1,
-    "incomplete": 2,
-    "complete": 3
+    "notstart": 2,
+    "shipped": 3,
+    "complete": 4
 }
 
 def executeSQL(sql):
@@ -13,3 +14,4 @@ def executeSQL(sql):
         return [
             dict(zip(columns, row))
             for row in cursor.fetchall()
+        ]

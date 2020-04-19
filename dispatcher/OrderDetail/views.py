@@ -27,7 +27,7 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
             res = executeSQL(sql)
         else:
             return Response({"status": 400, "error": "Missing user id."}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"status": 200, "Response":{"order": res}}, status=status.HTTP_200_OK)
+        return Response({"status": 200, "response": res}, status=status.HTTP_200_OK)
 
 class OrderListViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
@@ -42,7 +42,7 @@ class OrderListViewSet(viewsets.ModelViewSet):
             res = executeSQL(sql)
         else:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"response": {"order": res, "status": 200}}, status=status.HTTP_200_OK)
+        return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
 
 class PlaceOrderViewSet(viewsets.ModelViewSet):
