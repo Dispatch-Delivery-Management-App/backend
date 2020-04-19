@@ -10,16 +10,16 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        user = request.data.get('userId', None)
+        user = request.data.get('user_id', None)
         if user is not None:
             # queryset = OrderDetail.objects.filter(user=user)
             sql = "SELECT * FROM OrderDetail_orderdetail O "\
-                  "JOIN(SELECT id AS  from_id, firstname AS From_FirstName, lastname AS From_LastName, " \
-                  "street AS From_Street, city AS From_City, state AS From_State, zipcode AS From_Zipcode "\
+                  "JOIN(SELECT id AS  from_id, firstname AS from_firstname, lastname AS from_lastname, " \
+                  "street AS from_street, city AS from_city, state AS from_state, zipcode AS from_zipcode "\
                   "FROM Address_address) A "\
                   "ON O.from_address_id = A.from_id "\
-                  "JOIN(SELECT id AS to_id, firstname AS To_FirstName, lastname AS To_LastName, " \
-                  "street AS To_Street, city AS To_City, state AS To_State, zipcode As To_Zipcode " \
+                  "JOIN(SELECT id AS to_id, firstname AS to_firstname, lastname AS to_lastname, " \
+                  "street AS to_street, city AS to_city, state AS to_state, zipcode As to_zipcode " \
                   "FROM Address_address) A2 " \
                   "ON O.to_address_id = A2.to_id " \
                   "WHERE O.user_id = {};".format(user)
