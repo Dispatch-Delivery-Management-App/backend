@@ -6,7 +6,6 @@ status_dict = {
     "complete": 3
 }
 
-
 def executeSQL(sql):
     with connection.cursor() as cursor:
         cursor.execute(sql)
@@ -14,6 +13,3 @@ def executeSQL(sql):
         return [
             dict(zip(columns, row))
             for row in cursor.fetchall()
-        ]
-        #res = cursor.fetchall()
-        #return(res)

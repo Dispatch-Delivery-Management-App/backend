@@ -8,3 +8,4 @@ class TrackingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Tracking.objects.all()
         return queryset
+

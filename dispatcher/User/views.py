@@ -16,3 +16,4 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ProfileViewSet(viewsets.ModelViewSet):
     pass
+
