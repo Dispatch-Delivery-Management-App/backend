@@ -8,7 +8,7 @@ from Station.models import Station
 class OrderDetail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     from_address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='fromaddress')
-    to_address = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='toaddress')
+    to_address  = models.ForeignKey(Address, on_delete=models.CASCADE, related_name='toaddress')
     status = models.IntegerField(default=0)
     tracking = models.ForeignKey(Tracking, on_delete=models.CASCADE)
     category = models.CharField(max_length=30, null=True)
