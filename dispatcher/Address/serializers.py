@@ -6,7 +6,8 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = ('id','firstname', 'lastname', 'street', 'city', 'state', 'zipcode', 'phone')
 
+
 class AddressListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AddressList
-        fields = ('id', 'user', 'address')
+        fields = ('id','user','address')
