@@ -6,6 +6,9 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
+from .utils import executeSQL
+
+
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
@@ -19,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class LoginViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserLoginSerializer
+    serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
         username = request.data.get('username', None)
@@ -27,14 +30,10 @@ class LoginViewSet(viewsets.ModelViewSet):
         if username is None:
             return Response({"error": "No user name.", 'status': 400}, status=status.HTTP_400_BAD_REQUEST)
         if password is None:
-            return Response({"error": "No password.", 'status': 400}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response({'error': 'User name not found.', 'status': 404}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            if user.password == password:
-                return Response(request.data, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'Invalid password.', 'status': 401}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Wrong password.", 'status': 400}, status=status.HTTP_400_BAD_REQUEST)
+        sql = "SELECT * FROM User_user U " \
+              "WHERE U.username = '{0}' AND U.password = '{1}';".format(username, password)
+        res = executeSQL(sql)
+        if res is None:
+            return Response({"error": "Invalid user.", 'status': 400}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(res, status=status.HTTP_200_OK)
