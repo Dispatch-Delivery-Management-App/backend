@@ -78,7 +78,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         tracking= request.data.get('tracking')
         category = request.data.get('packageCategory', None)
         capacity = request.data.get('packageWeight', 0.0)
-
+        item_info = request.data.get('item_info', None)
         pickup_time = request.data.get('MMDD') + ' ' + request.data.get('startSlot').split('-')[0]
         print(pickup_time)
         crt = datetime.datetime.now()
@@ -92,6 +92,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                          to_address=Address.objects.get(id=to_address_id),
                          station=Station.objects.get(id=station),
                          tracking=Tracking.objects.get(id=tracking),
+                         item_info=item_info,
                          create_time=crt,
                          pickup_time=pct,
                          category=category,
