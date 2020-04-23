@@ -2,6 +2,8 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .utils import *
+import datetime
+
 
 from User.models import User
 from Address.models import Address
@@ -81,18 +83,38 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         user_id = request.data.get('user_id', None)
         if user_id is None: return Response({"error": "Missing user id.", "status": 400},
                                             status=status.HTTP_400_BAD_REQUEST)
+        #try;;
         self.save_orderdetail(request)
         return Response({"response": {"status": 200}}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self,request):
-        user_id = self.request.data.get("user_id")
+        user_id = self.request.data.get('user_id', None)
         (from_address_id, to_address_id)= self.verify_address_id(request, user_id)
         print(from_address_id,to_address_id)
         station= request.data.get('station')
         tracking= request.data.get('tracking')
-        po = OrderDetail(user=User.objects.get(id=user_id), from_address=Address.objects.get(id=from_address_id),
-                         to_address=Address.objects.get(id=to_address_id), station=Station.objects.get(id=station),
-                         tracking=Tracking.objects.get(id=tracking))
+        category = request.data.get('packageCategory', None)
+        capacity = request.data.get('packageWeight', 0.0)
+        item_info = request.data.get('item_info', None)
+        pickup_time = request.data.get('MMDD') + ' ' + request.data.get('startSlot').split('-')[0]
+        print(pickup_time)
+        crt = datetime.datetime.now()
+        pct = datetime.datetime.strptime(pickup_time, '%d-%m-%Y %H:%M')
+
+        print(pickup_time)
+        print(pct)
+
+        po = OrderDetail(user=User.objects.get(id=user_id),
+                         from_address=Address.objects.get(id=from_address_id),
+                         to_address=Address.objects.get(id=to_address_id),
+                         station=Station.objects.get(id=station),
+                         tracking=Tracking.objects.get(id=tracking),
+                         item_info=item_info,
+                         create_time=crt,
+                         pickup_time=pct,
+                         category=category,
+                         capacity=capacity #,status=status
+                         )
         po.save()
 
 
@@ -141,7 +163,6 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         print("in insert_new_address")
         addr = Address(firstname=fname, lastname=lname, street=street, city=city,state=state,zipcode=zipcode)
         addr.save()
-        print("save addr", addr.id)
         addr_list = AddressList(user=User.objects.get(id=user_id), address=Address.objects.get(id=addr.id))
         addr_list.save()
 
