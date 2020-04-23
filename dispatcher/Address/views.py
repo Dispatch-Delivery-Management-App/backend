@@ -30,7 +30,7 @@ class AddressListViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        user = request.data.get('user', None)
+        user = request.data.get('user_id', None)
         if user is not None:
             # queryset = AddressList.objects.filter(user = user)
             sql = "SELECT * FROM Address_addresslist L " \
