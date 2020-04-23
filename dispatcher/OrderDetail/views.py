@@ -19,8 +19,12 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
         key = request.data.get('key', None)
         if key is None:
             return Response({'error': 'Missing search key', 'status':400}, status=status.HTTP_400_BAD_REQUEST)
+        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where id = \"{}\"\
+            OR LOWER( item_info ) LIKE \"%{}%\";'.format(key, key)
+        instance = executeSQL(sql)
+        return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
 
-#----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 class OrderDetailViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
@@ -56,7 +60,7 @@ class OrderListViewSet(viewsets.ModelViewSet):
         user = request.data.get('user_id', None)
         if user is not None:
             sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname \
-            FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\ 
+            FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
             WHERE OrderDetail_orderdetail.user_id = {};".format(user)
             res = executeSQL(sql)
         else:
