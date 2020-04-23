@@ -12,6 +12,21 @@ from Station.models import Station
 from Tracking.models import Tracking
 from OrderDetail.models import OrderDetail
 
+
+class SearchOrderViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderDetailSerializer
+    queryset = OrderDetail.objects.all()
+
+    def create(self, request):
+        key = request.data.get('key', None)
+        if key is None:
+            return Response({'error': 'Missing search key', 'status':400}, status=status.HTTP_400_BAD_REQUEST)
+        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where id = \"{}\"\
+            OR LOWER( item_info ) LIKE \"%{}%\";'.format(key, key)
+        instance = executeSQL(sql)
+        return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
+
+#------------------------------------------------------------------------------------------------------------
 class OrderDetailViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
@@ -46,13 +61,15 @@ class OrderListViewSet(viewsets.ModelViewSet):
     def create(self, request):
         user = request.data.get('user_id', None)
         if user is not None:
-            sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id WHERE OrderDetail_orderdetail.user_id = {};".format(user)
+            sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname \
+            FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
+            WHERE OrderDetail_orderdetail.user_id = {};".format(user)
             res = executeSQL(sql)
         else:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
-
+#----------------------------------------------------------------------------------------------------------------
 class PlaceOrderViewSet(viewsets.ModelViewSet):
 
     serializer_class = OrderDetailSerializer
@@ -149,4 +166,5 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         addr_list = AddressList(user=User.objects.get(id=user_id), address=Address.objects.get(id=addr.id))
         addr_list.save()
 
+        print("save addrlist",addr.id)
         return addr.id
