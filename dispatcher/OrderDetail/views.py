@@ -19,10 +19,15 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         key = request.data.get('key', None)
+        user_id = request.data.get('user_id', None)
         if key is None:
             return Response({'error': 'Missing search key', 'status':400}, status=status.HTTP_400_BAD_REQUEST)
-        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where id = \"{}\"\
-            OR LOWER( item_info ) LIKE \"%{}%\";'.format(key, key)
+        if user_id is None:
+            return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
+
+        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where user_id = {} \
+                AND (id = \"{}\"\
+                OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key)
         instance = executeSQL(sql)
         return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
 
@@ -85,7 +90,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                                             status=status.HTTP_400_BAD_REQUEST)
         #try;;
         self.save_orderdetail(request)
-        return Response({"response": {"status": 200}}, status=status.HTTP_200_OK)
+        return Response({"response": {}, "status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self,request):
         user_id = self.request.data.get('user_id', None)
