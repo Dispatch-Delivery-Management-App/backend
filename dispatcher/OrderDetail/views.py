@@ -90,7 +90,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                                             status=status.HTTP_400_BAD_REQUEST)
         #try;;
         self.save_orderdetail(request)
-        return Response({"response": {}, "status": 200}, status=status.HTTP_200_OK)
+        return Response({"response": "Should be plan list here","status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self,request):
         user_id = self.request.data.get('user_id', None)
