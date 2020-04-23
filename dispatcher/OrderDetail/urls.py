@@ -7,5 +7,6 @@ router = DefaultRouter()
 router.register(r'orderdetail', OrderDetailViewSet, basename='orderdetail')
 router.register(r'orderlist', OrderListViewSet, basename='orderlist')
 router.register(r'placeorder', PlaceOrderViewSet, basename='placeorder')
+router.register(r'search', SearchOrderViewSet, basename='search')
 
 urlpatterns = router.urls
