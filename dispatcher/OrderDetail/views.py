@@ -3,6 +3,12 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .utils import *
 
+from User.models import User
+from Address.models import Address
+from Address.models import AddressList
+from Station.models import Station
+from Tracking.models import Tracking
+from OrderDetail.models import OrderDetail
 
 class OrderDetailViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
@@ -46,7 +52,81 @@ class OrderListViewSet(viewsets.ModelViewSet):
 
 
 class PlaceOrderViewSet(viewsets.ModelViewSet):
+
     serializer_class = OrderDetailSerializer
+
     def get_queryset(self):
         queryset = OrderDetail.objects.all()
         return queryset
+
+    def create(self,request):
+        print("in create")
+        user_id = request.data.get('user_id', None)
+        if user_id is None: return Response({"error": "Missing user id.", "status": 400},
+                                            status=status.HTTP_400_BAD_REQUEST)
+        self.save_orderdetail(request)
+        return Response({"response": {"status": 200}}, status=status.HTTP_200_OK)
+
+    def save_orderdetail(self,request):
+        user_id = self.request.data.get("user_id")
+        (from_address_id, to_address_id)= self.verify_address_id(request, user_id)
+        print(from_address_id,to_address_id)
+        station= request.data.get('station')
+        tracking= request.data.get('tracking')
+        po = OrderDetail(user=User.objects.get(id=user_id), from_address=Address.objects.get(id=from_address_id),
+                         to_address=Address.objects.get(id=to_address_id), station=Station.objects.get(id=station),
+                         tracking=Tracking.objects.get(id=tracking))
+        po.save()
+
+
+    def verify_address_id(self, request, user_id):
+        print("In verify_address_id")
+        faddr = request.data.get('fromAddress', None)
+        taddr = request.data.get('toAddress', None)
+
+        faddr_id = self.check_address_id(faddr, user_id)
+        taddr_id = self.check_address_id(taddr, user_id)
+        print("in verify_address_id",faddr_id, taddr_id)
+        return faddr_id, taddr_id
+
+    #If address id not exist, insert id
+    def check_address_id(self, addr, user_id):
+        print("check_address_id")
+        if addr is None:
+            return None
+        try:
+            if "addr_id" in addr: return addr["addr_id"]
+            cur_id = self.get_address_id(user_id, addr["firstname"],
+                                    addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
+            if cur_id is None:
+                cur_id = self.insert_new_address(user_id, addr["firstname"],
+                                addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
+            return cur_id
+        except:
+            print("Unable to get address Id")
+
+    #check if address is already in DB
+    def get_address_id(self, user_id, fname, lname, street, city, state, zipcode):
+
+        addr = Address.objects.filter(firstname=fname, lastname=lname, street=street, city=city,
+                                      state=state,zipcode=zipcode).values_list('id', flat=True)
+        if not addr:
+            return None
+        else:
+            addr_list = AddressList.objects.filter(user=user_id, address=addr[0])
+            if not addr_list:
+                addr_list = AddressList(user=User.objects.get(id=user_id), address=Address.objects.get(id=addr[0]))
+                addr_list.save()
+        return addr[0]
+
+    #insert new address to DB
+    def insert_new_address(self,user_id, fname, lname, street, city, state, zipcode):
+        print("in insert_new_address")
+        addr = Address(firstname=fname, lastname=lname, street=street, city=city,state=state,zipcode=zipcode)
+        addr.save()
+        print("save addr", addr.id)
+        addr_list = AddressList(user=User.objects.get(id=user_id), address=Address.objects.get(id=addr.id))
+        addr_list.save()
+
+        print("save addrlist",addr.id)
+        return addr.id
