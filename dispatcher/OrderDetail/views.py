@@ -39,8 +39,8 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        user = request.data.get('user_id', None)
-        if user is not None:
+        order_id = request.data.get('order_id', None)
+        if order_id is not None:
             # queryset = OrderDetail.objects.filter(user=user)
             sql = "SELECT * FROM OrderDetail_orderdetail O "\
                   "JOIN(SELECT id AS  from_id, firstname AS from_firstname, lastname AS from_lastname, " \
@@ -51,10 +51,10 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
                   "street AS to_street, city AS to_city, state AS to_state, zipcode As to_zipcode " \
                   "FROM Address_address) A2 " \
                   "ON O.to_address_id = A2.to_id " \
-                  "WHERE O.user_id = {};".format(user)
+                  "WHERE O.id = {};".format(order_id)
             res = executeSQL(sql)
         else:
-            return Response({"status": 400, "error": "Missing user id."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"status": 200, "response": res}, status=status.HTTP_200_OK)
 
 class OrderListViewSet(viewsets.ModelViewSet):
