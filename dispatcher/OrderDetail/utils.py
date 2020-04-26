@@ -8,6 +8,10 @@ status_dict = {
     "complete": 4
 }
 
+shipping_method_dict = {
+    0: 'drone',
+    1: 'robot'
+}
 
 GOOGLEMAP_BASE_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 
