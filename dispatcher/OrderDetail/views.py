@@ -34,9 +34,9 @@ class OrderMapViewSet(viewsets.ModelViewSet):
         station_str = station_obj.street+'+'+station_obj.city+'+'+station_obj.state
 
         PARAMS = {
-            'origin': from_address_str,
+            'origin': station_str,
             'destination': to_address_Str,
-            'waypoints': station_str,
+            'waypoints': from_address_str,
             'mode': 'driving',
             'key':'AIzaSyDJ7sVPTcdaIA2If4BPN43JqXnio8qfjyQ'
             }
@@ -45,9 +45,14 @@ class OrderMapViewSet(viewsets.ModelViewSet):
         if data['status'] != 'OK':
             return Response({"status": 400, "error": "Address has error"}, status=status.HTTP_400_BAD_REQUEST)
 
-        first_part, second_part = parse_json(data)
+        if order.shipping_method == 'robot':
+            first_part, second_part = parse_json(data)
+        else:
+            first_part = [data['routes'][0]['legs'][0]['start_location'], data['routes'][0]['legs'][0]['end_location']]
+            second_part = [data['routes'][0]['legs'][1]['start_location'], data['routes'][0]['legs'][1]['end_location']]
 
         return Response({'response': {"first_part": first_part,"second_part": second_part}, 'status':200}, status=status.HTTP_200_OK)
+
 
 #------------------------------------------------------------------------------------------------------------
 class SearchOrderViewSet(viewsets.ModelViewSet):
