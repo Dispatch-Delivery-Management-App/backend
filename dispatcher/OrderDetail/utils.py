@@ -1,11 +1,16 @@
 from django.db import connection
 
+
 status_dict = {
     "draft": 1,
     "notstart": 2,
     "shipped": 3,
     "complete": 4
 }
+
+
+GOOGLEMAP_BASE_URL = 'https://maps.googleapis.com/maps/api/directions/json'
+
 
 def executeSQL(sql):
     with connection.cursor() as cursor:
@@ -16,7 +21,6 @@ def executeSQL(sql):
             for row in cursor.fetchall()
         ]
 
-GOOGLEMAP_BASE_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 
 def parse_json(data):
 
