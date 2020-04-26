@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .utils import *
 import datetime
+import requests
 
 
 from User.models import User
@@ -12,7 +13,43 @@ from Station.models import Station
 from Tracking.models import Tracking
 from OrderDetail.models import OrderDetail
 
+class OrderMapViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderDetailSerializer
+    queryset = OrderDetail.objects.all()
 
+    def create(self, request):
+        order_id = request.data.get('order_id', None)
+        if order_id is  None:
+            return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
+
+        order = OrderDetail.objects.get(id=order_id)
+
+        from_address_obj = order.from_address
+        from_address_str = from_address_obj.street+'+'+from_address_obj.city+'+'+from_address_obj.state
+
+        to_address_obj = order.to_address
+        to_address_Str = to_address_obj.street+'+'+to_address_obj.city+'+'+to_address_obj.state
+
+        station_obj = order.station
+        station_str = station_obj.street+'+'+station_obj.city+'+'+station_obj.state
+
+        PARAMS = {
+            'origin': from_address_str,
+            'destination': to_address_Str,
+            'waypoints': station_str,
+            'mode': 'driving',
+            'key':'AIzaSyDJ7sVPTcdaIA2If4BPN43JqXnio8qfjyQ'
+            }
+
+        data= requests.get(GOOGLEMAP_BASE_URL, PARAMS).json()
+        if data['status'] != 'OK':
+            return Response({"status": 400, "error": "Address has error"}, status=status.HTTP_400_BAD_REQUEST)
+
+        first_part, second_part = parse_json(data)
+
+        return Response({'response': {"first_part": first_part,"second_part": second_part}, 'status':200}, status=status.HTTP_200_OK)
+
+#------------------------------------------------------------------------------------------------------------
 class SearchOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     queryset = OrderDetail.objects.all()
@@ -55,6 +92,8 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
             res = executeSQL(sql)
         else:
             return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(res) == 0:
+            return Response({"status": 200, "response": {}}, status=status.HTTP_200_OK)
         return Response({"status": 200, "response": res[0]}, status=status.HTTP_200_OK)
 
 class OrderListViewSet(viewsets.ModelViewSet):
@@ -65,13 +104,16 @@ class OrderListViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         user = request.data.get('user_id', None)
-        if user is not None:
+        if user is None:
+            return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
+
+        res = {}
+        for order_status in range(1,5):
             sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname \
             FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
-            WHERE OrderDetail_orderdetail.user_id = {};".format(user)
-            res = executeSQL(sql)
-        else:
-            return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
+            WHERE OrderDetail_orderdetail.user_id = {} and OrderDetail_orderdetail.status = {};".format(user, order_status)
+            sql_res = executeSQL(sql)
+            res[order_status] = sql_res
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
 #----------------------------------------------------------------------------------------------------------------

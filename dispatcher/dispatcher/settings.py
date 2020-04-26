@@ -25,7 +25,7 @@ SECRET_KEY = '981(ut#%u3ji869@%_*6u=ef)q2cb#9(mjt!*c@r3)*zky@%)8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['django-env.eba-n33b6k56.us-west-2.elasticbeanstalk.com', '10.0.2.2', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['env-4.eba-sd2q99eb.us-west-2.elasticbeanstalk.com', '10.0.2.2', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -79,6 +79,17 @@ WSGI_APPLICATION = 'dispatcher.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.environ['RDS_DB_NAME'],
+#         'USER': os.environ['RDS_USERNAME'],
+#         'PASSWORD': os.environ['RDS_PASSWORD'],
+#         'HOST': os.environ['RDS_HOSTNAME'],
+#         'PORT': os.environ['RDS_PORT'],
+#     }
+# }
 
 DATABASES = {
     'default': {
