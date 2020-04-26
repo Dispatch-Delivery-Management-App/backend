@@ -143,10 +143,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         user_id = self.request.data.get('user_id', None)
         (from_address_id, to_address_id)= self.verify_address_id(request, user_id)
         station= request.data.get('station')
-
-        shipping_method_int = request.data.get('shipping_method', None)
-        shipping_method = shipping_method_dict[shipping_method_int]
-
+        shipping_method = request.data.get('shipping_method', None)
         amount = request.data.get('amount', None)
         tracking= request.data.get('tracking')
         category = request.data.get('packageCategory', None)
