@@ -25,5 +25,4 @@ urlpatterns = [
     path('api/', include('Station.urls')),
     path('api/', include('Tracking.urls')),
     path('api/', include('User.urls')),
-
 ]
