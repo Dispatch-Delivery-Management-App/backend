@@ -9,12 +9,11 @@ from .utils import *
 import datetime
 import requests
 
-from User.models import User
-from Address.models import Address
-from Address.models import AddressList
-from Station.models import Station
-from Tracking.models import Tracking
-from OrderDetail.models import OrderDetail
+from User.models import *
+from Address.models import *
+from Station.models import *
+from Tracking.models import *
+from OrderDetail.models import *
 
 
 class OrderMapViewSet(viewsets.ModelViewSet):
@@ -159,7 +158,6 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         station= request.data.get('station')
         shipping_method = request.data.get('shipping_method', None)
         amount = request.data.get('amount', None)
-        tracking= request.data.get('tracking')
         category = request.data.get('packageCategory', None)
         capacity = request.data.get('packageWeight', 0.0)
         item_info = request.data.get('item_info', None)
@@ -169,11 +167,15 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         crt = datetime.datetime.now()
         pct = datetime.datetime.strptime(pickup_time, '%d-%m-%Y %H:%M')
 
+        station_obj = Station.objects.get(id=station)
+        tracking_obj = Tracking(street=station_obj.street,city=station_obj.city ,state=station_obj.state,zipcode=station_obj.zipcode)
+        tracking_obj.save()
+
         po = OrderDetail(user=User.objects.get(id=user_id),
                          from_address=Address.objects.get(id=from_address_id),
                          to_address=Address.objects.get(id=to_address_id),
                          station=Station.objects.get(id=station),
-                         tracking=Tracking.objects.get(id=tracking),
+                         tracking=tracking_obj,
                          item_info=item_info,
                          create_time=crt,
                          pickup_time=pct,
@@ -184,6 +186,17 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                          total_cost = total_cost
                          )
         po.save()
+
+        if shipping_method == 'drone':
+            machine_list = StationDrone.objects.all().filter(status=0)[:amount]
+            for drone_obj in machine_list:
+                drone_obj.status = po.id
+                drone_obj.save()
+        if shipping_method == 'robot':
+            machine_list = StationRobot.objects.all().filter(status=0)[:amount]
+            for robot_obj in machine_list:
+                robot_obj.status = po.id
+                robot_obj.save()
 
     # verify address id if it exists
     def verify_address_id(self, request, user_id):
@@ -254,18 +267,18 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         to_address_Str = toAddressObj.street + '+' + toAddressObj.city + '+' + toAddressObj.state
 
         #time lowest
-        print(toAddressObj.state)
-        sql = "SELECT * FROM Station_station S " \
-              "WHERE S.state = '{0}' ".format(toAddressObj.state)
-        instance = executeSQL(sql)
-        print(instance)
+        # print(toAddressObj.state)
+        # sql = "SELECT * FROM Station_station S " \
+        #       "WHERE S.state = '{0}' ".format(toAddressObj.state)
+        # instance = executeSQL(sql)
+        instance = Station.objects.filter(state=toAddressObj.state)
         globalDistance = 1000000.0
         globalStationId = -1
         for station in instance:
-            state = station.get('state')
-            city = station.get('city')
-            street = station.get('street')
-            id = station.get('id')
+            state = station.state
+            city = station.city
+            street = station.street
+            id = station.id
             station_str = street + '+' + city + '+' + state
             PARAMS = {
                 'origin' : station_str,
