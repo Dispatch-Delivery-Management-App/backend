@@ -1,6 +1,6 @@
 from .serializers import *
 from rest_framework import viewsets, status
-from rest_framework.response import Response
+from django.http import JsonResponse
 
 class StationViewSet(viewsets.ModelViewSet):
     serializer_class = StationSerializer
@@ -9,17 +9,17 @@ class StationViewSet(viewsets.ModelViewSet):
         queryset = Station.objects.all()
         return queryset
 
+
 class StationDroneViewSet(viewsets.ModelViewSet):
     serializer_class = StationDroneSerializer
 
     def get_queryset(self):
-        queryset = StationDrone.objects.all()
+        queryset = Station.objects.all()
         return queryset
-
 
 class StationRobotViewSet(viewsets.ModelViewSet):
     serializer_class = StationRobotSerializer
 
     def get_queryset(self):
-        queryset = StationRobot.objects.all()
+        queryset = Station.objects.all()
         return queryset
