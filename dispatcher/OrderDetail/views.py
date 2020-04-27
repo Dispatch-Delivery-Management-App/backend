@@ -16,6 +16,7 @@ from Station.models import Station
 from Tracking.models import Tracking
 from OrderDetail.models import OrderDetail
 
+
 class OrderMapViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     queryset = OrderDetail.objects.all()
@@ -45,7 +46,6 @@ class OrderMapViewSet(viewsets.ModelViewSet):
             }
 
         data= requests.get(GOOGLEMAP_BASE_URL, PARAMS).json()
-        print(data)
         if data['status'] != 'OK':
             return Response({"status": 400, "error": "Address has error"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,6 +58,7 @@ class OrderMapViewSet(viewsets.ModelViewSet):
         return Response({'response': {"first_part": first_part,"second_part": second_part}, 'status':200}, status=status.HTTP_200_OK)
 
 
+#------------------------------------------------------------------------------------------------------------
 class SearchOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     queryset = OrderDetail.objects.all()
@@ -72,10 +73,11 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
 
         sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where user_id = {} \
                 AND (id = \"{}\"\
-                OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key)
+                OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key.lower())
         instance = executeSQL(sql)
         return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
 
+#------------------------------------------------------------------------------------------------------------
 class OrderDetailViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
@@ -103,6 +105,8 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
             return Response({"status": 200, "response": {}}, status=status.HTTP_200_OK)
         return Response({"status": 200, "response": res[0]}, status=status.HTTP_200_OK)
 
+
+#----------------------------------------------------------------------------------------------------------------------
 class OrderListViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
@@ -124,6 +128,9 @@ class OrderListViewSet(viewsets.ModelViewSet):
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
 
+
+
+#----------------------------------------------------------------------------------------------------------------
 class PlaceOrderViewSet(viewsets.ModelViewSet):
 
     serializer_class = OrderDetailSerializer
@@ -133,30 +140,27 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self,request):
-        print("in create")
         user_id = request.data.get('user_id', None)
         if user_id is None: return Response({"error": "Missing user id.", "status": 400},
                                             status=status.HTTP_400_BAD_REQUEST)
-        #try;;
         self.save_orderdetail(request)
         return Response({"response": "Should be plan list here","status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self,request):
         user_id = self.request.data.get('user_id', None)
         (from_address_id, to_address_id)= self.verify_address_id(request, user_id)
-        print(from_address_id,to_address_id)
         station= request.data.get('station')
+        shipping_method = request.data.get('shipping_method', None)
+        amount = request.data.get('amount', None)
         tracking= request.data.get('tracking')
         category = request.data.get('packageCategory', None)
         capacity = request.data.get('packageWeight', 0.0)
         item_info = request.data.get('item_info', None)
+        order_status = request.data.get('order_status', None)
+        total_cost = request.data.get('fee', 0)
         pickup_time = request.data.get('MMDD') + ' ' + request.data.get('startSlot').split('-')[0]
-        print(pickup_time)
         crt = datetime.datetime.now()
         pct = datetime.datetime.strptime(pickup_time, '%d-%m-%Y %H:%M')
-
-        print(pickup_time)
-        print(pct)
 
         po = OrderDetail(user=User.objects.get(id=user_id),
                          from_address=Address.objects.get(id=from_address_id),
@@ -167,24 +171,25 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                          create_time=crt,
                          pickup_time=pct,
                          category=category,
-                         capacity=capacity #,status=status
+                         capacity=capacity,
+                         status=order_status,
+                         shipping_method = shipping_method,
+                         total_cost = total_cost
                          )
         po.save()
 
-
+    # verify address id if it exists
     def verify_address_id(self, request, user_id):
-        print("In verify_address_id")
         faddr = request.data.get('fromAddress', None)
         taddr = request.data.get('toAddress', None)
 
         faddr_id = self.check_address_id(faddr, user_id)
         taddr_id = self.check_address_id(taddr, user_id)
-        print("in verify_address_id",faddr_id, taddr_id)
+
         return faddr_id, taddr_id
 
     #If address id not exist, insert id
     def check_address_id(self, addr, user_id):
-        print("check_address_id")
         if addr is None:
             return None
         try:
@@ -192,8 +197,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
             cur_id = self.get_address_id(user_id, addr["firstname"],
                                     addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
             if cur_id is None:
-                cur_id = self.insert_new_address(user_id, addr["firstname"],
-                                addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
+                cur_id = self.insert_new_address(user_id, addr["firstname"], addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
             return cur_id
         except:
             print("Unable to get address Id")
@@ -214,15 +218,14 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
 
     #insert new address to DB
     def insert_new_address(self,user_id, fname, lname, street, city, state, zipcode):
-        print("in insert_new_address")
         addr = Address(firstname=fname, lastname=lname, street=street, city=city,state=state,zipcode=zipcode)
         addr.save()
         addr_list = AddressList(user=User.objects.get(id=user_id), address=Address.objects.get(id=addr.id))
         addr_list.save()
 
-        print("save addrlist",addr.id)
         return addr.id
-    
+
+#----------------------------------------------------------------------------------------------------------------    
 class OrderPlanViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):

@@ -1,3 +1,4 @@
+
 from django.db import connection
 
 def executeSQL(sql):
@@ -8,3 +9,9 @@ def executeSQL(sql):
             dict(zip(columns, row))
             for row in cursor.fetchall()
         ]
+
+type_dict = {
+  "customer": 1,
+  "merchant": 2
+}
+
