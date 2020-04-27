@@ -10,7 +10,7 @@ status_dict = {
 
 
 GOOGLEMAP_BASE_URL = 'https://maps.googleapis.com/maps/api/directions/json'
-
+GEOCODE_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
 
 def executeSQL(sql):
     with connection.cursor() as cursor:
