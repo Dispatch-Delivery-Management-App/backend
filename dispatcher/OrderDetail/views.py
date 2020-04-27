@@ -54,7 +54,21 @@ class OrderMapViewSet(viewsets.ModelViewSet):
             first_part = [data['routes'][0]['legs'][0]['start_location'], data['routes'][0]['legs'][0]['end_location']]
             second_part = [data['routes'][0]['legs'][1]['start_location'], data['routes'][0]['legs'][1]['end_location']]
 
-        return Response({'response': {"first_part": first_part,"second_part": second_part}, 'status':200}, status=status.HTTP_200_OK)
+        tracking_obj = order.tracking
+        tracking_str = tracking_obj.street + '+' + tracking_obj.city + '+' + tracking_obj.state
+
+        params_tracking = {
+            'address':tracking_str,
+            'key':'AIzaSyDJ7sVPTcdaIA2If4BPN43JqXnio8qfjyQ'
+        }
+
+        tracking_data = requests.get(GEOCODE_BASE_URL, params_tracking).json()
+        if tracking_data['status'] != 'OK':
+            tracking_loc = {"lat": 0, "lng": 0}
+        else:
+            tracking_loc = tracking_data['results'][0]['geometry']['location']
+
+        return Response({'response': {"first_part": first_part,"second_part": second_part, "tracking":tracking_loc}, 'status':200}, status=status.HTTP_200_OK)
 
 
 #------------------------------------------------------------------------------------------------------------
@@ -197,6 +211,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
             for robot_obj in machine_list:
                 robot_obj.status = po.id
                 robot_obj.save()
+
 
     # verify address id if it exists
     def verify_address_id(self, request, user_id):
