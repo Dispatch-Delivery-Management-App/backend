@@ -71,10 +71,12 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
         if user_id is None:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
 
-        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where user_id = {} \
+        sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
                 AND (id = \"{}\"\
                 OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key.lower())
         instance = executeSQL(sql)
+        if len(instance) == 0:
+            return Response({'response': {}, 'status':200}, status=status.HTTP_200_OK)
         return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
 
 #------------------------------------------------------------------------------------------------------------
@@ -120,9 +122,9 @@ class OrderListViewSet(viewsets.ModelViewSet):
 
         res = {}
         for order_status in range(1,5):
-            sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname \
-            FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
-            WHERE OrderDetail_orderdetail.user_id = {} and OrderDetail_orderdetail.status = {};".format(user, order_status)
+            sql = "SELECT O.id, category, status, lastname \
+            FROM OrderDetail_orderdetail AS O JOIN Address_address A2 ON O.to_address_id = A2.id\
+            WHERE O.user_id = {} and O.status = {};".format(user, order_status)
             sql_res = executeSQL(sql)
             res[order_status] = sql_res
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
@@ -225,7 +227,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
 
         return addr.id
 
-#----------------------------------------------------------------------------------------------------------------    
+#----------------------------------------------------------------------------------------------------------------
 class OrderPlanViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
     def get_queryset(self):
@@ -248,7 +250,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
 
         #time lowest
         print(toAddressObj.state)
-        sql = "SELECT * FROM dispatcher.Station_station S " \
+        sql = "SELECT * FROM Station_station S " \
               "WHERE S.state = '{0}' ".format(toAddressObj.state)
         instance = executeSQL(sql)
         print(instance)

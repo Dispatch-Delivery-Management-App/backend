@@ -42,4 +42,3 @@ class AddressListViewSet(viewsets.ModelViewSet):
             return Response({"status": 400, "error": "Missing user id."}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"status": 200, "response": res}, status=status.HTTP_200_OK)
-
