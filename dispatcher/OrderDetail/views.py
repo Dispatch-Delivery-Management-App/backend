@@ -67,7 +67,7 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
         if user_id is None:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
 
-        sql = 'SELECT * FROM dispatcher.OrderDetail_orderdetail where user_id = {} \
+        sql = 'SELECT * FROM \"OrderDetail_orderdetail\" where user_id = {} \
                 AND (id = \"{}\"\
                 OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key.lower())
         instance = executeSQL(sql)
@@ -84,14 +84,14 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
         order_id = request.data.get('order_id', None)
         if order_id is not None:
             # queryset = OrderDetail.objects.filter(user=user)
-            sql = "SELECT * FROM OrderDetail_orderdetail O "\
+            sql = "SELECT * FROM \"OrderDetail_orderdetail\" O "\
                   "JOIN(SELECT id AS  from_id, firstname AS from_firstname, lastname AS from_lastname, " \
                   "street AS from_street, city AS from_city, state AS from_state, zipcode AS from_zipcode "\
-                  "FROM Address_address) A "\
+                  "FROM \"Address_address\") A "\
                   "ON O.from_address_id = A.from_id "\
                   "JOIN(SELECT id AS to_id, firstname AS to_firstname, lastname AS to_lastname, " \
                   "street AS to_street, city AS to_city, state AS to_state, zipcode As to_zipcode " \
-                  "FROM Address_address) A2 " \
+                  "FROM \"Address_address\") A2 " \
                   "ON O.to_address_id = A2.to_id " \
                   "WHERE O.id = {};".format(order_id)
             res = executeSQL(sql)
@@ -117,7 +117,7 @@ class OrderListViewSet(viewsets.ModelViewSet):
         res = {}
         for order_status in range(1,5):
             sql = "SELECT OrderDetail_orderdetail.id, category, status, lastname \
-            FROM OrderDetail_orderdetail JOIN Address_address A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
+            FROM \"OrderDetail_orderdetail\" JOIN \"Address_address\" A2 ON OrderDetail_orderdetail.to_address_id = A2.id\
             WHERE OrderDetail_orderdetail.user_id = {} and OrderDetail_orderdetail.status = {};".format(user, order_status)
             sql_res = executeSQL(sql)
             res[order_status] = sql_res

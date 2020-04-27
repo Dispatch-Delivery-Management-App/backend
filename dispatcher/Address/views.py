@@ -15,7 +15,7 @@ class AddressViewSet(viewsets.ModelViewSet):
         address_id = request.data.get('address_id', None)
         if address_id is not None:
             # queryset = Address.objects.filter(address_id = address_id)
-            sql = "SELECT * FROM Address_address A "\
+            sql = "SELECT * FROM \"Address_address\" A "\
                   "WHERE A.id = {};".format(address_id)
             res = executeSQL(sql)
         else:
@@ -33,7 +33,7 @@ class AddressListViewSet(viewsets.ModelViewSet):
         user = request.data.get('user_id', None)
         if user is not None:
             # queryset = AddressList.objects.filter(user = user)
-            sql = "SELECT * FROM Address_addresslist L " \
+            sql = "SELECT * FROM \"Address_addresslist\" L " \
                   "JOIN Address_address A "\
                   "ON L.address_id = A.id "\
                   "WHERE user_id = {};".format(user)
