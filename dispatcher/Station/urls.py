@@ -5,8 +5,8 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 
-router.register(r'tracking', StationViewSet, basename='tracking')
-router.register(r'tracking', StationDroneViewSet, basename='tracking')
-router.register(r'tracking', StationRobotViewSet, basename='tracking')
+router.register(r'station', StationViewSet, basename='station')
+router.register(r'station-drone', StationDroneViewSet, basename='stationdrone')
+router.register(r'station-robot', StationRobotViewSet, basename='stationrobot')
 
 urlpatterns = router.urls
