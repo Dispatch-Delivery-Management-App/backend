@@ -272,11 +272,11 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                 globalDistance = float(curDistance[0])
                 globalStationId = id
         fastTime = int(globalDistance / 1.5)
-        fastMethod = "Drone"
+        fastMethod = "drone"
 
         #price lowest
 
-        lowestPriceMethod = "Drone"
+        lowestPriceMethod = "drone"
         droneObj = Drone.objects.first()
         droneCapacity = float(getattr(droneObj, 'capacity'))
         dronePrice = int(getattr(droneObj, 'price'))
@@ -291,12 +291,12 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         fastAmount = int((capacity / droneCapacity) + 1)
         CheapAmount = 0
         if (capacity / droneCapacity + 1) * dronePrice < (capacity / robotCapacity + 1) * robotPrice:
-            lowestPriceMethod = "Drone"
+            lowestPriceMethod = "drone"
             cheapCost = (capacity / droneCapacity + 1) * dronePrice
             cheapAmount = int(capacity / droneCapacity + 1)
             cheapTime = fastTime + 10
         else:
-            lowestPriceMethod = "Robot"
+            lowestPriceMethod = "robot"
             cheapCost = (capacity / robotCapacity + 1) * robotPrice
             cheapAmount = int(capacity / robotCapacity + 1)
             cheapTime = fastTime + 10
