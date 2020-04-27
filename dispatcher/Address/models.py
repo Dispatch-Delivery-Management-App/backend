@@ -9,3 +9,7 @@ class Address(models.Model):
     state = models.CharField(max_length=30, null=True)
     zipcode = models.IntegerField(default=0, null=True)
     phone = models.CharField(max_length=30, null=True)
+
+class AddressList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
