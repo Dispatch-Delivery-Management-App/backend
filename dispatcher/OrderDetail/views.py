@@ -71,12 +71,17 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
         if user_id is None:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
 
-        sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
-                AND (id = \"{}\"\
-                OR LOWER( item_info ) LIKE \"%{}%\");'.format(user_id, key, key.lower())
+        sql = ""
+        if key.isdigit():
+            key = int(key)
+            sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
+                    AND id = {}'.format(user_id, key)
+        else:
+            sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
+                    AND LOWER( item_info ) LIKE \"%{}%\";'.format(user_id, key.lower())
+
         instance = executeSQL(sql)
-        if len(instance) == 0:
-            return Response({'response': {}, 'status':200}, status=status.HTTP_200_OK)
+
         return Response({'response': instance, 'status':200}, status=status.HTTP_200_OK)
 
 #------------------------------------------------------------------------------------------------------------
