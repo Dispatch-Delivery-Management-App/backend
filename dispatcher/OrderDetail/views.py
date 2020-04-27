@@ -190,8 +190,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
             cur_id = self.get_address_id(user_id, addr["firstname"],
                                     addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
             if cur_id is None:
-                cur_id = self.insert_new_address(user_id, addr["firstname"],
-                                addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
+                cur_id = self.insert_new_address(user_id, addr["firstname"], addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
             return cur_id
         except:
             print("Unable to get address Id")
