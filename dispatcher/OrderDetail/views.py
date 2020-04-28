@@ -361,6 +361,13 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                            "duration": cheapTime,
                            "shipping_method": lowestPriceMethod,
                            "amount": cheapAmount,
-                           "rating":totalRating}],
+                           "rating":totalRating},
+                            {"type": 0,
+                            "station": globalStationId,
+                            "fee": fastCost,
+                            "duration": fastTime,
+                            "shipping_method": fastMethod,
+                            "amount": fastAmount,
+                            "rating": totalRating}],
                          "status":200
                          })
