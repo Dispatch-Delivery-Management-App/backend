@@ -15,6 +15,7 @@ from Station.models import *
 from Tracking.models import *
 from OrderDetail.models import *
 
+import time
 
 class OrderMapViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
@@ -63,6 +64,7 @@ class OrderMapViewSet(viewsets.ModelViewSet):
         }
 
         tracking_data = requests.get(GEOCODE_BASE_URL, params_tracking).json()
+        time.sleep(0.5)
         if tracking_data['status'] != 'OK':
             tracking_loc = {"lat": 0, "lng": 0}
         else:
@@ -146,9 +148,6 @@ class OrderListViewSet(viewsets.ModelViewSet):
             sql_res = executeSQL(sql)
             res[order_status] = sql_res
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
-
-
-
 
 #----------------------------------------------------------------------------------------------------------------
 class PlaceOrderViewSet(viewsets.ModelViewSet):
