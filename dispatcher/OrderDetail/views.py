@@ -1,3 +1,4 @@
+import math
 import re
 import sys
 
@@ -268,25 +269,30 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        toAddress = request.data.get('to_address')
-        fromAddress = request.data.get('from_address')
-        capacity = request.data.get('capacity')
+        toAddress = request.data.get('toAddress')
+        fromAddress = request.data.get('fromAddress')
+        capacity = request.data.get('packageWeight')
 
         if toAddress is None or fromAddress is None:
             return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
+        toAddressStreet = toAddress["street"]
+        toAddressCity = toAddress["city"]
+        toAddressState = toAddress["state"]
+        fromAddressStreet = fromAddress["street"]
+        fromAddressCity = fromAddress["city"]
+        fromAddressState = fromAddress["state"]
 
-        toAddressObj = Address.objects.get(id=toAddress)
-
-        fromAddressObj = Address.objects.get(id=fromAddress)
-        from_address_str = fromAddressObj.street + '+' + fromAddressObj.city + '+' + fromAddressObj.state
-        to_address_Str = toAddressObj.street + '+' + toAddressObj.city + '+' + toAddressObj.state
+        from_address_str = fromAddressStreet + '+' + fromAddressCity + '+' + fromAddressState
+        to_address_Str = toAddressStreet + '+' + toAddressCity + '+' + toAddressState
 
         #time lowest
         # print(toAddressObj.state)
         # sql = "SELECT * FROM Station_station S " \
         #       "WHERE S.state = '{0}' ".format(toAddressObj.state)
         # instance = executeSQL(sql)
-        instance = Station.objects.filter(state=toAddressObj.state)
+
+        instance = Station.objects.filter(state=toAddressState)
+
         globalDistance = 1000000.0
         globalStationId = -1
         for station in instance:
@@ -305,12 +311,13 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
             data = requests.get(GOOGLEMAP_BASE_URL, PARAMS).json()
             if data['status'] != 'OK':
                 return Response({"status": 400, "error": "Address has error"}, status=status.HTTP_400_BAD_REQUEST)
-            curDistance = re.findall(r"\d+\.?\d*",data['routes'][0]['legs'][0]['distance']['text'])
+            curDistance = re.findall(r"\d+\.?\d*", data['routes'][0]['legs'][0]['distance']['text'])
             if float(curDistance[0]) < globalDistance:
                 globalDistance = float(curDistance[0])
                 globalStationId = id
         fastTime = int(globalDistance / 1.5)
         fastMethod = "drone"
+        availableNumber = StationRobot.objects.filter(status=0).count()
 
         #price lowest
 
@@ -326,19 +333,22 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         totalRating = float(ratingList[0])
         cheapCost = sys.maxsize
         fastCost = float(capacity / droneCapacity) * dronePrice
-        fastAmount = int((capacity / droneCapacity) + 1)
+        fastAmount = math.ceil(capacity / droneCapacity)
         CheapAmount = 0
-        if (capacity / droneCapacity + 1) * dronePrice < (capacity / robotCapacity + 1) * robotPrice:
+        if math.ceil(capacity / droneCapacity) * dronePrice < math.ceil(capacity / robotCapacity) * robotPrice:
             lowestPriceMethod = "drone"
-            cheapCost = (capacity / droneCapacity + 1) * dronePrice
-            cheapAmount = int(capacity / droneCapacity + 1)
+            cheapCost = math.ceil(capacity / droneCapacity) * dronePrice
+            cheapAmount = math.ceil(capacity / droneCapacity)
             cheapTime = fastTime + 10
         else:
             lowestPriceMethod = "robot"
-            cheapCost = (capacity / robotCapacity + 1) * robotPrice
-            cheapAmount = int(capacity / robotCapacity + 1)
+            cheapCost = math.ceil(capacity / robotCapacity) * robotPrice
+            cheapAmount = math.ceil(capacity / robotCapacity)
             cheapTime = fastTime + 10
-        return Response([{"type": 2,
+
+        #best
+
+        return Response({"response": [{"type": 2,
                           "station": globalStationId,
                           "fee": fastCost,
                           "duration": fastTime,
@@ -351,4 +361,6 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                            "duration": cheapTime,
                            "shipping_method": lowestPriceMethod,
                            "amount": cheapAmount,
-                           "rating":totalRating}])
+                           "rating":totalRating}],
+                         "status":200
+                         })
