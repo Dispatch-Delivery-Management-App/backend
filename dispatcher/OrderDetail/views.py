@@ -290,7 +290,9 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         # sql = "SELECT * FROM Station_station S " \
         #       "WHERE S.state = '{0}' ".format(toAddressObj.state)
         # instance = executeSQL(sql)
+
         instance = Station.objects.filter(state=toAddressState)
+
         globalDistance = 1000000.0
         globalStationId = -1
         for station in instance:
