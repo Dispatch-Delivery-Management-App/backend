@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-
+# import django_heroku
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +25,7 @@ SECRET_KEY = '981(ut#%u3ji869@%_*6u=ef)q2cb#9(mjt!*c@r3)*zky@%)8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', "localhost"]
+ALLOWED_HOSTS = ['.herokuapp.com', '10.0.2.2', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -91,6 +91,17 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'dispatcher',
+#         'USER': 'laioffer',
+#         'PASSWORD': 'test1234',
+#         'HOST': 'dispatcher-db-3.cncmh3stkkzn.us-west-2.rds.amazonaws.com',
+#         'PORT': '5432',
+#     }
+# }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -116,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'US/Pacific'
 
 USE_I18N = True
 
@@ -130,3 +141,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
+
+# django_heroku.settings(locals())
