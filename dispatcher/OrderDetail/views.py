@@ -16,7 +16,6 @@ from Station.models import *
 from Tracking.models import *
 from OrderDetail.models import *
 
-import time
 
 class OrderMapViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
@@ -65,7 +64,6 @@ class OrderMapViewSet(viewsets.ModelViewSet):
         }
 
         tracking_data = requests.get(GEOCODE_BASE_URL, params_tracking).json()
-        time.sleep(0.5)
         if tracking_data['status'] != 'OK':
             tracking_loc = {"lat": 0, "lng": 0}
         else:
@@ -154,12 +152,8 @@ class OrderListViewSet(viewsets.ModelViewSet):
             res[order_status] = sql_res
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
-<<<<<<< HEAD
-#----------------------------------------------------------------------------------------------------------------
-=======
 
 # ----------------------------------------------------------------------------------------------------------------
->>>>>>> 00c66cdb6bb317e66a0c8ea6c7f9031623c1bac0
 class PlaceOrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
 
@@ -271,3 +265,163 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
 
 
 # ----------------------------------------------------------------------------------------------------------------
+class OrderPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderDetailSerializer
+
+    def get_queryset(self):
+        queryset = OrderDetail.objects.all()
+        return queryset
+
+    def create(self, request):
+        toAddress = request.data.get('toAddress')
+        fromAddress = request.data.get('fromAddress')
+        capacity = request.data.get('packageWeight')
+
+        if toAddress is None or fromAddress is None:
+            return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
+        toAddressStreet = toAddress["street"]
+        toAddressCity = toAddress["city"]
+        toAddressState = toAddress["state"]
+        fromAddressStreet = fromAddress["street"]
+        fromAddressCity = fromAddress["city"]
+        fromAddressState = fromAddress["state"]
+
+        from_address_str = fromAddressStreet + '+' + fromAddressCity + '+' + fromAddressState
+        to_address_Str = toAddressStreet + '+' + toAddressCity + '+' + toAddressState
+
+        # time lowest
+        # print(toAddressObj.state)
+        # sql = "SELECT * FROM Station_station S " \
+        #       "WHERE S.state = '{0}' ".format(toAddressObj.state)
+        # instance = executeSQL(sql)
+
+        instance = Station.objects.filter(state=fromAddressState)
+
+        minPriceMethod = "drone"
+        minPriceRating = 0.0
+        minPrice = float('inf')
+        minPriceStationId = -1
+        minPriceTime = 0.0
+        minPriceAmount = 0
+        minDistanceRating = 0.0
+        minTime = float('inf')
+        minDistanceStationId = -1
+        minDistancePrice = 0.0
+        minDistanceMethod = "drone"
+        minDistanceAmount = 0
+        droneSpeed = 1.3
+        robotSpeed = 0.8
+        maxRatingStationId = -1
+        maxRatingMethod = "drone"
+        maxRating = 0.0
+        maxRatingPrice = 0.0
+        maxRatingTime = 0.0
+        maxWeigh = 0
+        maxRatingAmount = 0
+
+        for station in instance:
+            state = station.state
+            city = station.city
+            street = station.street
+            id = station.id
+            rating = float(station.rating)
+            station_str = street + '+' + city + '+' + state
+            PARAMS = {
+                'origin': station_str,
+                'destination': to_address_Str,
+                'waypoints': from_address_str,
+                'mode': 'driving',
+                'key': 'AIzaSyDJ7sVPTcdaIA2If4BPN43JqXnio8qfjyQ'
+            }
+            data = requests.get(GOOGLEMAP_BASE_URL, PARAMS).json()
+            if data['status'] != 'OK':
+                return Response({"status": 400, "error": "Address has error"}, status=status.HTTP_400_BAD_REQUEST)
+            curDistance = re.findall(r"\d+\.?\d*", data['routes'][0]['legs'][0]['distance']['text'])
+            availStationDrone = StationDrone.objects.filter(station=id)
+            availDrone = getattr(availStationDrone.first(), 'drone')
+            droneCapacity = float(getattr(availDrone, 'capacity'))
+            dronePrice = int(getattr(availDrone, 'price'))
+            availDroneNum = availStationDrone.filter(status=0).count()
+            availStationRobot = StationRobot.objects.filter(station=id)
+            availRobot = getattr(availStationRobot.first(), 'robot')
+            robotCapacity = float(getattr(availRobot, 'capacity'))
+            robotPrice = int(getattr(availRobot, 'price'))
+            availRobotNum = availStationRobot.filter(status=0).count()
+            if availDroneNum > math.ceil(capacity / droneCapacity):
+                droneTotalPrice = math.ceil(capacity / droneCapacity) * dronePrice
+                if float(curDistance[0]) / droneSpeed < minTime:
+                    minTime = float(curDistance[0]) / droneSpeed
+                    minDistanceStationId = id
+                    minDistanceRating = rating
+                    minDistancePrice = droneTotalPrice
+                    minDistanceMethod = "drone"
+                    minDistanceAmount = math.ceil(capacity / droneCapacity)
+                if droneTotalPrice < minPrice:
+                    minPrice = droneTotalPrice
+                    minPriceStationId = id
+                    minPriceTime = float(curDistance[0]) / droneSpeed
+                    minPriceMethod = "drone"
+                    minPriceRating = rating
+                    minPriceAmount = math.ceil(capacity / droneCapacity)
+                droneWeigh = 0.4 * rating + 0.5 * float(curDistance[0]) / droneSpeed + 0.5 * droneTotalPrice
+                if droneWeigh > maxWeigh:
+                    maxWeigh = droneWeigh
+                    maxRating = rating
+                    maxRatingStationId = id
+                    maxRatingMethod = "drone"
+                    maxRatingTime = float(curDistance[0]) / droneSpeed
+                    maxRatingPrice = droneTotalPrice
+                    maxRatingAmount = math.ceil(capacity / droneCapacity)
+
+            if availRobotNum > math.ceil(capacity / robotCapacity):
+                robotTotalPrice = math.ceil(capacity / robotCapacity) * robotPrice
+                if float(curDistance[0]) / robotSpeed < minTime:
+                    minTime = float(curDistance[0]) / robotSpeed
+                    minDistanceStationId = id
+                    minDistanceRating = rating
+                    minDistancePrice = robotTotalPrice
+                    minDistanceMethod = "robot"
+                    minDistanceAmount = math.ceil(capacity / robotCapacity)
+                if robotTotalPrice < minPrice:
+                    minPrice = robotTotalPrice
+                    minPriceStationId = id
+                    minPriceMethod = "robot"
+                    minPriceTime = float(curDistance[0]) / robotSpeed
+                    minPriceRating = rating
+                    minPriceAmount = math.ceil(capacity / robotCapacity)
+                robotWeigh = 0.4 * rating + 0.5 * float(curDistance[0]) / robotSpeed + 0.5 * robotTotalPrice
+                if robotWeigh > maxWeigh:
+                    maxWeigh = robotWeigh
+                    maxRatingStationId = id
+                    maxRatingMethod = "robot"
+                    maxRatingTime = float(curDistance[0]) / robotSpeed
+                    maxRating = rating
+                    maxRatingPrice = robotTotalPrice
+                    maxRatingAmount = math.ceil(capacity / robotCapacity)
+
+        if minPriceStationId == -1:
+            return Response({"response": "There is no available plan"})
+
+        return Response({"response": [{"type": 0,
+                                       "station": maxRatingStationId,
+                                       "fee": maxRatingPrice,
+                                       "duration": math.ceil(maxRatingTime),
+                                       "shipping_method": maxRatingMethod,
+                                       "amount": maxRatingAmount,
+                                       "rating": maxRating},
+                                      {"type": 1,
+                                       "station": minPriceStationId,
+                                       "fee": minPrice,
+                                       "duration": math.ceil(minPriceTime),
+                                       "shipping_method": minPriceMethod,
+                                       "amount": minPriceAmount,
+                                       "rating": minPriceRating},
+                                      {"type": 2,
+                                       "station": minDistanceStationId,
+                                       "fee": minDistancePrice,
+                                       "duration": math.ceil(minTime),
+                                       "shipping_method": minDistanceMethod,
+                                       "amount": minDistanceAmount,
+                                       "rating": minDistanceRating}],
+                         "status": 200
+                         })
