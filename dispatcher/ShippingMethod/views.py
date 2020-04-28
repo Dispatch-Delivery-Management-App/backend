@@ -1,7 +1,5 @@
 from .serializers import *
-from rest_framework import viewsets, status
-from django.http import JsonResponse
-from rest_framework.response import Response
+from rest_framework import viewsets
 
 
 class DroneViewSet(viewsets.ModelViewSet):
