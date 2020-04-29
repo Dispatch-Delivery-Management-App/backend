@@ -242,7 +242,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         if addr is None:
             return None
         try:
-            if "addr_id" in addr: return addr["addr_id"]
+            if addr["addr_id"] != 0 : return addr["addr_id"]
             cur_id = self.get_address_id(user_id, addr["firstname"],
                                          addr["lastname"], addr["street"], addr["city"], addr["state"], addr["zipcode"])
             if cur_id is None:
