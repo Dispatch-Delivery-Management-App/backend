@@ -63,5 +63,5 @@ class TokenViewSet(viewsets.ModelViewSet):
         global global_token
         #print(global_token)
         global_token = token
-        #print(global_token)
+        print(global_token)
         return Response({'response': {'Get your token'}, 'status': 200}, status=status.HTTP_200_OK)
