@@ -2,13 +2,14 @@ import math
 import re
 import sys
 
+from django.contrib.sites import requests
+
 from ShippingMethod.models import Drone, Robot
 from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .utils import *
 import datetime
-import requests
 
 from User.models import *
 from Address.models import *
@@ -436,3 +437,33 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                                        "rating": minDistanceRating}],
                          "status": 200
                          }, status=status.HTTP_200_OK)
+
+# ----------------------------------------------------------------------------------------------------------------
+class FeedbackViewSet(viewsets.ModelViewSet):
+    serializer_class = OrderDetailSerializer
+
+    def get_queryset(self):
+        queryset = OrderDetail.objects.all()
+        return queryset
+
+    def create(self, request):
+        order_id = request.data.get('order_id', None)
+        feedback = request.data.get('feedback', None)
+        if order_id is None:
+            return Response({"status": 400, "error": "Missing order id."}, status=status.HTTP_400_BAD_REQUEST)
+        if feedback is None:
+            return Response({"status": 400, "error": "Missing feedback."}, status=status.HTTP_400_BAD_REQUEST)
+        order = OrderDetail.objects.get(id=order_id)
+        station_id = order.station_id
+        order.feedback = feedback
+        order.save()
+        station = Station.objects.get(id=station_id)
+        count = station.rating_count
+        prev_rating = station.rating
+        sum = count*prev_rating+feedback
+        count = count+1
+        station.rating_count = count
+        station.rating = sum/count
+        station.save()
+        return Response({"response": "Feedback received", "status": 200}, status=status.HTTP_200_OK)
+

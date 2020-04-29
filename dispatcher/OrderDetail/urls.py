@@ -10,5 +10,6 @@ router.register(r'placeorder', PlaceOrderViewSet, basename='placeorder')
 router.register(r'search', SearchOrderViewSet, basename='search')
 router.register(r'map', OrderMapViewSet, basename='map')
 router.register(r'orderplan', OrderPlanViewSet, basename='orderplan')
+router.register(r'feedback', FeedbackViewSet, basename='feedback')
 
 urlpatterns = router.urls
