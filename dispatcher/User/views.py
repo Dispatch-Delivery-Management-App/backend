@@ -35,6 +35,7 @@ class SignUpViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
+        print(38)
         username = request.data.get('username', None)
         password = request.data.get('password', None)
         email = request.data.get('email', None)
@@ -47,10 +48,14 @@ class SignUpViewSet(viewsets.ModelViewSet):
             return Response({"error":"No password.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            print(51)
             user = User.objects.get(username=username)
+            print(53)
         except User.DoesNotExist:
+            print(55)
             instance = User(username=username, type=1, password=password, email=email, firstname=firstname, lastname=lastname)
             instance.save()
             return Response({"response": {"id": instance.id, "username": instance.username, "email":instance.email, "password":instance.password, "firstname":instance.firstname, "lastname":instance.lastname}, "status": 201}, status=status.HTTP_201_CREATED)
         else:
+            print(60)
             return Response({"error":"User name already exists.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)

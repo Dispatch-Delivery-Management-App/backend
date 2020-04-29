@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import django_heroku
+# import django_heroku
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -80,27 +80,27 @@ WSGI_APPLICATION = 'dispatcher.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'dispatcher',
-#         'USER': 'admin',
-#         'PASSWORD': 'test1234',
-#         'HOST': 'dispatcher-project-instance.cncmh3stkkzn.us-west-2.rds.amazonaws.com',
-#         'PORT': '3306',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'dispatcher',
-        'USER': 'laioffer',
+        'USER': 'admin',
         'PASSWORD': 'test1234',
-        'HOST': 'dispatcher-db-3.cncmh3stkkzn.us-west-2.rds.amazonaws.com',
-        'PORT': '5432',
+        'HOST': 'dispatcher-project-instance.cncmh3stkkzn.us-west-2.rds.amazonaws.com',
+        'PORT': '3306',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'dispatcher',
+#         'USER': 'laioffer',
+#         'PASSWORD': 'test1234',
+#         'HOST': 'dispatcher-db-3.cncmh3stkkzn.us-west-2.rds.amazonaws.com',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -142,4 +142,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
 
-django_heroku.settings(locals())
+# django_heroku.settings(locals())
