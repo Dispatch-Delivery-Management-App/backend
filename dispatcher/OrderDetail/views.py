@@ -2,7 +2,7 @@ import math
 import re
 import sys
 
-from django.contrib.sites import requests
+import requests
 
 from ShippingMethod.models import Drone, Robot
 from .serializers import *
@@ -459,11 +459,10 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         order.save()
         station = Station.objects.get(id=station_id)
         count = station.rating_count
-        prev_rating = station.rating
-        sum = count*prev_rating+feedback
+        prev_rating = station.total_rating
+        sum = prev_rating + feedback
         count = count+1
         station.rating_count = count
         station.rating = sum/count
         station.save()
         return Response({"response": "Feedback received", "status": 200}, status=status.HTTP_200_OK)
-
