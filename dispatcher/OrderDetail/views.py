@@ -359,7 +359,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
             robotPrice = int(getattr(availRobot, 'price'))
             availRobotNum = availStationRobot.filter(status=0).count()
             if availDroneNum > math.ceil(capacity / droneCapacity):
-                droneTotalPrice = math.ceil(capacity / droneCapacity) * dronePrice
+                droneTotalPrice = float(math.ceil(capacity / droneCapacity) * dronePrice)
                 if float(curDistance[0]) / droneSpeed < minTime:
                     minTime = float(curDistance[0]) / droneSpeed
                     minDistanceStationId = id
@@ -385,7 +385,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                     maxRatingAmount = math.ceil(capacity / droneCapacity)
 
             if availRobotNum > math.ceil(capacity / robotCapacity):
-                robotTotalPrice = math.ceil(capacity / robotCapacity) * robotPrice
+                robotTotalPrice = float(math.ceil(capacity / robotCapacity) * robotPrice)
                 if float(curDistance[0]) / robotSpeed < minTime:
                     minTime = float(curDistance[0]) / robotSpeed
                     minDistanceStationId = id
@@ -415,21 +415,21 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
 
         return Response({"response": [{"type": 0,
                                        "station": maxRatingStationId,
-                                       "fee": maxRatingPrice,
+                                       "fee": float(maxRatingPrice),
                                        "duration": math.ceil(maxRatingTime),
                                        "shipping_method": maxRatingMethod,
                                        "amount": maxRatingAmount,
                                        "rating": maxRating},
                                       {"type": 1,
                                        "station": minPriceStationId,
-                                       "fee": minPrice,
+                                       "fee": float(minPrice),
                                        "duration": math.ceil(minPriceTime),
                                        "shipping_method": minPriceMethod,
                                        "amount": minPriceAmount,
                                        "rating": minPriceRating},
                                       {"type": 2,
                                        "station": minDistanceStationId,
-                                       "fee": minDistancePrice,
+                                       "fee": float(minDistancePrice),
                                        "duration": math.ceil(minTime),
                                        "shipping_method": minDistanceMethod,
                                        "amount": minDistanceAmount,
