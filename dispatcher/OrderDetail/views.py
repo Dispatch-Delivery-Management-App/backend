@@ -96,8 +96,19 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
                     AND LOWER( item_info ) LIKE \"%{}%\";'.format(user_id, key.lower())
 
         instance = executeSQL(sql)
+        res = {}
+        for i in range(1,5):
+            res[i] = []
+        for order in instance:
+            order_id = order["id"]
+            sql_order = "SELECT O.id, category, status, lastname \
+                FROM OrderDetail_orderdetail AS O JOIN Address_address A2 ON O.to_address_id = A2.id\
+                WHERE O.id = {};".format(order_id);
+            order_obj = executeSQL(sql_order)[0]
+            order_status = order_obj["status"]
+            res[order_status].append(order_obj)
 
-        return Response({'response': instance, 'status': 200}, status=status.HTTP_200_OK)
+        return Response({'response': res, 'status': 200}, status=status.HTTP_200_OK)
 
 
 # ------------------------------------------------------------------------------------------------------------
@@ -400,7 +411,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                     maxRatingAmount = math.ceil(capacity / robotCapacity)
 
         if minPriceStationId == -1:
-            return Response({"response": "There is no available plan"})
+            return Response({"response": "There is no available plan", "status": 200}, status=status.HTTP_200_OK)
 
         return Response({"response": [{"type": 0,
                                        "station": maxRatingStationId,
@@ -424,4 +435,4 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                                        "amount": minDistanceAmount,
                                        "rating": minDistanceRating}],
                          "status": 200
-                         })
+                         }, status=status.HTTP_200_OK)
