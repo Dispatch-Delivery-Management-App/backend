@@ -1,13 +1,11 @@
 from django.db import connection
 
-
 status_dict = {
-    "draft": 1,
-    "notstart": 2,
-    "shipped": 3,
-    "complete": 4
+    1: "Draft",
+    2: "Not start",
+    3: "Depart to pick up ",
+    4: "Complete "
 }
-
 
 GOOGLEMAP_BASE_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 GEOCODE_BASE_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
