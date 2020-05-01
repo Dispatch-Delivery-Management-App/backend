@@ -1,3 +1,4 @@
+APScheduler==3.6.3
 asgiref==3.2.7
 CacheControl==0.12.6
 cachetools==4.1.0
@@ -10,7 +11,8 @@ django-heroku==0.3.1
 django-request==1.5.5
 djangorestframework==3.11.0
 djangorestframework-firebase==0.3.0
-firebase-admin==2.18.0
+dnspython==1.16.0
+firebase-admin==4.1.0
 google-api-core==1.17.0
 google-api-python-client==1.8.2
 google-auth==1.14.1
@@ -26,6 +28,8 @@ httplib2==0.17.3
 idna==2.9
 Markdown==3.2.1
 msgpack==1.0.0
+mysql-connector-python==8.0.19
+mysqlclient==1.4.6
 protobuf==3.11.3
 psycopg2==2.8.5
 pyasn1==0.4.8
@@ -37,6 +41,7 @@ requests==2.23.0
 rsa==4.0
 six==1.14.0
 sqlparse==0.3.1
+tzlocal==2.0.0
 uritemplate==3.0.1
 urllib3==1.25.9
 whitenoise==5.0.1

@@ -31,27 +31,27 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 def send_notification(user_id):
     # This registration token comes from the client FCM SDKs.
-    cred = credentials.Certificate("dispatcher-275400-firebase-adminsdk-kzph2-2aee0b9347.json")
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps:
+        cred = credentials.Certificate("firebase_cred.json")
+        firebase_admin.initialize_app(cred)
 
     user = User.objects.get(id=user_id)
     registration_token = user.token
-    #registration_token = 'dyiDFkn6Sw62cmDErqz3YX:APA91bFkfFFITNWkKty2my1_kELvxFclNWmsQuLPrpSMEe1M4dZI9oyT2mlEyJmP8JvxShlICAgp4mm0RLNOiuzOo83A3lp6doimW-xYoYjaFePM08AUZz2UGw7T3xM2ISKyzE57is6E'
 
-    # message = messaging.Message(
-    #     data={
-    #         'order id: ': '1',
-    #         'status': 'complete',
-    #     },
-    #     token=registration_token,
-    # )
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title='Order status has changed',
+            body='This is a Notification Body for testing',
+        ),
+        token=registration_token,
+    )
+    # Send a message to the device corresponding to the provided registration token.
 
-    # Send a message to the device corresponding to the provided
-    # registration token.
     response = messaging.send(message)
     # Response is a message ID string.
     print('Successfully sent message:', response)
     return response
+
 
 class TokenViewSet(viewsets.ModelViewSet):
     serializer_class = TrackingSerializer
@@ -66,8 +66,10 @@ class TokenViewSet(viewsets.ModelViewSet):
         if token is None:
             return Response({'error': 'No token or user id', 'status': 400}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_obj = User.objects.get(id=user_id)
-        user_obj.token = token
-        user_obj.save()
-
-        return Response({'response': {'Get your token'}, 'status': 200}, status=status.HTTP_200_OK)
+        try:
+            user_obj = User.objects.get(id=user_id)
+            user_obj.token = token
+            user_obj.save()
+            return Response({'response': {'Get your token'}, 'status': 200}, status=status.HTTP_200_OK)
+        except:
+            return Response({'error': {'User not found'}, 'status': 400}, status=status.HTTP_400_BAD_REQUEST)

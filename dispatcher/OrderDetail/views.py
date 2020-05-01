@@ -9,6 +9,7 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .utils import *
+from .scheduler import *
 import datetime
 
 from User.models import *
@@ -90,26 +91,19 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
         sql = ""
         if key.isdigit():
             key = int(key)
-            sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
-                    AND id = {}'.format(user_id, key)
+            sql = 'SELECT O.id, category, status, lastname \
+                     FROM \"OrderDetail_orderdetail\" AS O JOIN \"Address_address\" A2 ON O.to_address_id = A2.id\
+                     WHERE O.user_id = {} \
+                     AND O.id = {}'.format(user_id, key)
         else:
-            sql = 'SELECT * FROM OrderDetail_orderdetail where user_id = {} \
-                    AND LOWER( item_info ) LIKE \"%{}%\";'.format(user_id, key.lower())
+            sql = 'SELECT O.id, category, status, lastname \
+                     FROM \"OrderDetail_orderdetail\" AS O JOIN \"Address_address\" A2 ON O.to_address_id = A2.id\
+                     WHERE O.user_id = {} \
+                     AND LOWER( O.item_info ) LIKE \'%{}%\';'.format(user_id, key.lower())
 
         instance = executeSQL(sql)
-        res = {}
-        for i in range(1,5):
-            res[i] = []
-        for order in instance:
-            order_id = order["id"]
-            sql_order = "SELECT O.id, category, status, lastname \
-                FROM OrderDetail_orderdetail AS O JOIN Address_address A2 ON O.to_address_id = A2.id\
-                WHERE O.id = {};".format(order_id);
-            order_obj = executeSQL(sql_order)[0]
-            order_status = order_obj["status"]
-            res[order_status].append(order_obj)
 
-        return Response({'response': res, 'status': 200}, status=status.HTTP_200_OK)
+        return Response({'response': instance, 'status': 200}, status=status.HTTP_200_OK)
 
 
 # ------------------------------------------------------------------------------------------------------------
@@ -124,14 +118,14 @@ class OrderDetailViewSet(viewsets.ModelViewSet):
         order_id = request.data.get('order_id', None)
         if order_id is not None:
             # queryset = OrderDetail.objects.filter(user=user)
-            sql = "SELECT * FROM OrderDetail_orderdetail O " \
+            sql = "SELECT * FROM \"OrderDetail_orderdetail\" O " \
                   "JOIN(SELECT id AS  from_id, firstname AS from_firstname, lastname AS from_lastname, " \
                   "street AS from_street, city AS from_city, state AS from_state, zipcode AS from_zipcode " \
-                  "FROM Address_address) A " \
+                  "FROM \"Address_address\") A " \
                   "ON O.from_address_id = A.from_id " \
                   "JOIN(SELECT id AS to_id, firstname AS to_firstname, lastname AS to_lastname, " \
                   "street AS to_street, city AS to_city, state AS to_state, zipcode As to_zipcode " \
-                  "FROM Address_address) A2 " \
+                  "FROM \"Address_address\") A2 " \
                   "ON O.to_address_id = A2.to_id " \
                   "WHERE O.id = {};".format(order_id)
             res = executeSQL(sql)
@@ -155,13 +149,10 @@ class OrderListViewSet(viewsets.ModelViewSet):
         if user is None:
             return Response({"error": "Missing user id.", "status": 400}, status=status.HTTP_400_BAD_REQUEST)
 
-        res = {}
-        for order_status in range(1, 5):
-            sql = "SELECT O.id, category, status, lastname \
-            FROM OrderDetail_orderdetail AS O JOIN Address_address A2 ON O.to_address_id = A2.id\
-            WHERE O.user_id = {} and O.status = {};".format(user, order_status)
-            sql_res = executeSQL(sql)
-            res[order_status] = sql_res
+        sql = "SELECT O.id, category, status, lastname \
+                FROM \"OrderDetail_orderdetail\" AS O JOIN \"Address_address\" A2 ON O.to_address_id = A2.id\
+                WHERE O.user_id = {};".format(user)
+        res = executeSQL(sql)
         return Response({"response": res, "status": 200}, status=status.HTTP_200_OK)
 
 
@@ -177,8 +168,14 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         user_id = request.data.get('user_id', None)
         if user_id is None: return Response({"error": "Missing user id.", "status": 400},
                                             status=status.HTTP_400_BAD_REQUEST)
-        self.save_orderdetail(request)
-        return Response({"response": "Should be plan list here", "status": 200}, status=status.HTTP_200_OK)
+        order = self.save_orderdetail(request)
+
+        current = datetime.datetime.now()
+        schedule_time_first = current + datetime.timedelta(seconds=10)
+        #change_status_first(schedule_time_first, order)
+        schedule_time_second = current + datetime.timedelta(seconds=20)
+        #change_status_second(schedule_time_second, order)
+        return Response({"response": order.id, "status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self, request):
         user_id = self.request.data.get('user_id', None)
@@ -226,8 +223,9 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
             for robot_obj in machine_list:
                 robot_obj.status = po.id
                 robot_obj.save()
+        return po
 
-    # verify address id if it exists
+    #verify address id if it exists
     def verify_address_id(self, request, user_id):
         faddr = request.data.get('fromAddress', None)
         taddr = request.data.get('toAddress', None)
@@ -328,7 +326,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
         maxRating = 0.0
         maxRatingPrice = 0.0
         maxRatingTime = 0.0
-        maxWeigh = 0
+        maxWeigh = -10000000000
         maxRatingAmount = 0
 
         for station in instance:
@@ -352,12 +350,12 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
             availStationDrone = StationDrone.objects.filter(station=id)
             availDrone = getattr(availStationDrone.first(), 'drone')
             droneCapacity = float(getattr(availDrone, 'capacity'))
-            dronePrice = int(getattr(availDrone, 'price'))
+            dronePrice = float(getattr(availDrone, 'price'))
             availDroneNum = availStationDrone.filter(status=0).count()
             availStationRobot = StationRobot.objects.filter(station=id)
             availRobot = getattr(availStationRobot.first(), 'robot')
             robotCapacity = float(getattr(availRobot, 'capacity'))
-            robotPrice = int(getattr(availRobot, 'price'))
+            robotPrice = float(getattr(availRobot, 'price'))
             availRobotNum = availStationRobot.filter(status=0).count()
             if availDroneNum > math.ceil(capacity / droneCapacity):
                 droneTotalPrice = float(math.ceil(capacity / droneCapacity) * dronePrice)
@@ -375,7 +373,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                     minPriceMethod = "drone"
                     minPriceRating = rating
                     minPriceAmount = math.ceil(capacity / droneCapacity)
-                droneWeigh = 0.4 * rating + 0.5 * float(curDistance[0]) / droneSpeed + 0.5 * droneTotalPrice
+                droneWeigh = 0.4 * rating - 0.5 * float(curDistance[0]) / droneSpeed + 0.5 * droneTotalPrice
                 if droneWeigh > maxWeigh:
                     maxWeigh = droneWeigh
                     maxRating = rating
@@ -401,7 +399,7 @@ class OrderPlanViewSet(viewsets.ModelViewSet):
                     minPriceTime = float(curDistance[0]) / robotSpeed
                     minPriceRating = rating
                     minPriceAmount = math.ceil(capacity / robotCapacity)
-                robotWeigh = 0.4 * rating + 0.5 * float(curDistance[0]) / robotSpeed + 0.5 * robotTotalPrice
+                robotWeigh = 0.4 * rating - 0.5 * float(curDistance[0]) / robotSpeed + 0.5 * robotTotalPrice
                 if robotWeigh > maxWeigh:
                     maxWeigh = robotWeigh
                     maxRatingStationId = id
