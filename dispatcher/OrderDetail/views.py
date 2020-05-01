@@ -177,8 +177,8 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         user_id = request.data.get('user_id', None)
         if user_id is None: return Response({"error": "Missing user id.", "status": 400},
                                             status=status.HTTP_400_BAD_REQUEST)
-        self.save_orderdetail(request)
-        return Response({"response": "Should be plan list here", "status": 200}, status=status.HTTP_200_OK)
+        order_id = self.save_orderdetail(request)
+        return Response({"response": order_id, "status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self, request):
         user_id = self.request.data.get('user_id', None)
@@ -226,6 +226,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
             for robot_obj in machine_list:
                 robot_obj.status = po.id
                 robot_obj.save()
+        return po.id
 
     # verify address id if it exists
     def verify_address_id(self, request, user_id):
