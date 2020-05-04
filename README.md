@@ -9,7 +9,7 @@ $ sh env.sh
 $ cd dispatcher
 ```
 
-### If run locally:
+## If run locally:
 ```
 $ python3 manage.py runserver
 ```
