@@ -11,6 +11,7 @@ class AddressViewSet(viewsets.ModelViewSet):
         queryset = Address.objects.all()
         return queryset
 
+    # Post
     def create(self, request):
         address_id = request.data.get('address_id', None)
         if address_id is not None:

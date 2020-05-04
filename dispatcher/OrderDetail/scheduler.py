@@ -102,7 +102,7 @@ def send_notification(user_id, order_status, order_id):
     message = messaging.Message(
         notification=messaging.Notification(
             title='Order status has changed',
-            body='message_body',
+            body=message_body,
         ),
         token=registration_token,
     )

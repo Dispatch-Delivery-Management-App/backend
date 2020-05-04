@@ -99,7 +99,7 @@ class SearchOrderViewSet(viewsets.ModelViewSet):
             sql = 'SELECT O.id, category, status, lastname \
                      FROM \"OrderDetail_orderdetail\" AS O JOIN \"Address_address\" A2 ON O.to_address_id = A2.id\
                      WHERE O.user_id = {} \
-                     AND LOWER( O.item_info ) LIKE \'%{}%\';'.format(user_id, key.lower())
+                     AND (LOWER( O.item_info ) LIKE \'%{}%\' OR LOWER( O.category ) LIKE \'%{}%\');'.format(user_id, key.lower(), key.lower())
 
         instance = executeSQL(sql)
 
@@ -171,10 +171,10 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         order = self.save_orderdetail(request)
 
         current = datetime.datetime.now()
-        schedule_time_first = current + datetime.timedelta(seconds=10)
-        #change_status_first(schedule_time_first, order)
-        schedule_time_second = current + datetime.timedelta(seconds=20)
-        #change_status_second(schedule_time_second, order)
+        schedule_time_first = current + datetime.timedelta(seconds=15)
+        change_status_first(schedule_time_first, order)
+        schedule_time_second = current + datetime.timedelta(seconds=40)
+        change_status_second(schedule_time_second, order)
         return Response({"response": order.id, "status": 200}, status=status.HTTP_200_OK)
 
     def save_orderdetail(self, request):
@@ -196,7 +196,7 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
         tracking_obj = Tracking(street=station_obj.street, city=station_obj.city, state=station_obj.state,
                                 zipcode=station_obj.zipcode)
         tracking_obj.save()
-
+        
         po = OrderDetail(user=User.objects.get(id=user_id),
                          from_address=Address.objects.get(id=from_address_id),
                          to_address=Address.objects.get(id=to_address_id),
@@ -209,7 +209,8 @@ class PlaceOrderViewSet(viewsets.ModelViewSet):
                          capacity=capacity,
                          status=order_status,
                          shipping_method=shipping_method,
-                         total_cost=total_cost
+                         total_cost=total_cost,
+                         feedback=0
                          )
         po.save()
 
@@ -452,14 +453,20 @@ class FeedbackViewSet(viewsets.ModelViewSet):
         if feedback is None:
             return Response({"status": 400, "error": "Missing feedback."}, status=status.HTTP_400_BAD_REQUEST)
         order = OrderDetail.objects.get(id=order_id)
+        feedback_old = order.feedback
         station_id = order.station_id
         order.feedback = feedback
         order.save()
         station = Station.objects.get(id=station_id)
+        if feedback_old > 0:
+            station.total_rating = station.total_rating - feedback_old
+            station.rating_count = station.rating_count - 1
+            station.save()
         count = station.rating_count
         prev_rating = station.total_rating
         sum = prev_rating + feedback
         count = count+1
+        station.total_rating = sum
         station.rating_count = count
         station.rating = sum/count
         station.save()
